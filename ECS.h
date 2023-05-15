@@ -28,13 +28,14 @@ typedef std::bitset<MAX_COMPONENTS> ComponentMask;
 
 class ECS {
 private:
+public:
     // entity id parsing
     entID genEntityIDat(uint32_t index);
     entID replaceEntityIDat(uint32_t index);
     void clearEntityID(entID&);
     uint32_t getEntityIndex(entID const&);
     // component ID
-    unsigned int p_componentCounter;
+    unsigned int p_componentCounter{0};
     template <class T>
     int getCompID(){
         static int cid = p_componentCounter++;
@@ -69,21 +70,24 @@ private:
     
 public:
     entID newEntity();
-    void removeEntity(entID);
+    void removeEntity(entID&);
     bool entityValid(entID);
+    
+    size_t numEntities();
+    size_t numComponents();
     
     template <class T>
     T* addComp(entID i){
         assert(entityValid(i));
         int compID = getCompID<T>();
-        if (compID > pools.size()){
+        if (compID >= pools.size()){
             pools.resize(compID + 1, nullptr);
         }
         if (pools[compID] == nullptr){
             pools[compID] = new ObjectPool(sizeof(T));
         }
-        T* component = new (pools[compID]->get(i)) T();
-        entities.at(i).mask.set(getCompID<T>());
+        T* component = new (pools[compID]->get(getEntityIndex(i))) T();
+        entities.at(getEntityIndex(i)).mask.set(getCompID<T>());
         return component;
     }
     
