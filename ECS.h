@@ -92,11 +92,13 @@ public:
             ECS & home;
             uint32_t index;
             ComponentMask mask;
+            bool filter;
         public:
-            ViewIterator(ECS & h, uint32_t i, ComponentMask m) : home(h) {
-                index = i; mask = m;
+            ViewIterator(ECS & h, uint32_t i, ComponentMask m, bool f) : home(h) {
+                index = i; mask = m; filter = f;
             }
             entID operator*() const {
+                if (index == 0xFFFFFFFF){ return 0xFFFFFFFFFFFFFFFF; }
                 return home.entities.at(index).id;
             };
             bool operator==(ViewIterator const& other) const {
@@ -106,14 +108,15 @@ public:
                 return this->index != other.index;
             };
             ViewIterator& operator++(){
+                if (index == 0xFFFFFFFF){return *this;}
                 while (1) {
                     index++;
                     if (index >= home.entities.size()){
-                        index = -1;
+                        index = 0xFFFFFFFF;
                         return *this;
                     }
                     auto next = home.entities.at(index);
-                    if (home.entityValid(next.id) && (next.mask == mask)){
+                    if (home.entityValid(next.id) && (!filter || (next.mask == mask))){
                         return *this;
                     }
                 }
@@ -121,10 +124,10 @@ public:
         };
         
         const ViewIterator begin() const {
-            return ViewIterator(home, 0, mask);
+            return ViewIterator(home, 0, mask, filter);
         }
         const ViewIterator end() const {
-            return ViewIterator(home, -1, mask);
+            return ViewIterator(home, -1, mask, filter);
         }
     };
     
