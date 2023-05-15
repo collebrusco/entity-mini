@@ -66,12 +66,12 @@ void ECS::clearEntityID(entID& i) {
 }
 
 // isolate index half of id
-uint32_t ECS::getEntityIndex(const entID & i) {
+uint32_t ECS::getEntityIndex(const entID & i) const {
     return i >> 32;
 }
 
 // check if an id matches the one at its index
-bool ECS::entityValid(entID i) {
+bool ECS::entityValid(entID i) const {
     return i == (entities.at(getEntityIndex(i)).id);
 }
 

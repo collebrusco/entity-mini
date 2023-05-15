@@ -32,7 +32,7 @@ private:
     entID genEntityIDat(uint32_t index);
     entID replaceEntityIDat(uint32_t index);
     void clearEntityID(entID&);
-    uint32_t getEntityIndex(entID const&);
+    uint32_t getEntityIndex(entID const&) const;
     // component ID
     unsigned int p_componentCounter{0};
     template <class T>
@@ -59,23 +59,85 @@ private:
 public:
     entID newEntity();
     void removeEntity(entID&);
-    bool entityValid(entID);
+    bool entityValid(entID) const;
     
     size_t numEntities();
     size_t numComponents();
     
     template <class T>
     T* addComp(entID i);
-    
     template <class T>
     T* getComp(entID i);
-    
     template <class T>
     void removeComp(entID i);
+    
+    template <class... Types>
+    class SceneView {
+        ECS & home;
+        ComponentMask mask;
+        bool filter;
+    public:
+        SceneView(ECS* h) : home(*h) {
+            filter = !(sizeof...(Types) == 0);
+            mask.reset();
+            if (filter){
+                int ids[] = { 0, home.getCompID<Types>() ... };
+                for (int i = 0; i < sizeof...(Types); i++){
+                    mask.set(ids[i+1]);
+                }
+            }
+        }
+        class ViewIterator {
+        private:
+            ECS & home;
+            uint32_t index;
+            ComponentMask mask;
+        public:
+            ViewIterator(ECS & h, uint32_t i, ComponentMask m) : home(h) {
+                index = i; mask = m;
+            }
+            entID operator*() const {
+                return home.entities.at(index).id;
+            };
+            bool operator==(ViewIterator const& other) const {
+                return this->index == other.index;
+            }
+            bool operator!=(ViewIterator const& other) const {
+                return this->index != other.index;
+            };
+            ViewIterator& operator++(){
+                while (1) {
+                    index++;
+                    if (index >= home.entities.size()){
+                        index = -1;
+                        return *this;
+                    }
+                    auto next = home.entities.at(index);
+                    if (home.entityValid(next.id) && (next.mask == mask)){
+                        return *this;
+                    }
+                }
+            }
+        };
+        
+        const ViewIterator begin() const {
+            return ViewIterator(home, 0, mask);
+        }
+        const ViewIterator end() const {
+            return ViewIterator(home, -1, mask);
+        }
+    };
+    
+    template <class... Types>
+    SceneView<Types...> view(){
+        return SceneView<Types...>(this);
+    }
+    
 };
 
+
 template <class T>
-int ECS::getCompID(){
+int ECS::getCompID() {
     static int cid = p_componentCounter++;
     return cid;
 }
