@@ -100,13 +100,13 @@ public:
             entID operator*() const {
                 if (index == 0xFFFFFFFF){ return 0xFFFFFFFFFFFFFFFF; }
                 return home.entities.at(index).id;
-            };
+            }
             bool operator==(ViewIterator const& other) const {
                 return this->index == other.index;
             }
             bool operator!=(ViewIterator const& other) const {
                 return this->index != other.index;
-            };
+            }
             ViewIterator& operator++(){
                 if (index == 0xFFFFFFFF){return *this;}
                 while (1) {
