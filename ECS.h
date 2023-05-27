@@ -98,9 +98,26 @@ public:
             uint32_t index;
             ComponentMask mask;
             bool filter;
+            bool maskValid(ComponentMask& other){
+                return !(((other & mask) ^ mask).any());
+            }
         public:
             ViewIterator(ECS & h, uint32_t i, ComponentMask m, bool f) : home(h) {
                 index = i; mask = m; filter = f;
+                if (index == 0xFFFFFFFF){return;}
+                auto next = home.entities.at(index);
+                if (maskValid(next.mask)) {return;}
+                while (1) {
+                    index++;
+                    if (index >= home.entities.size()){
+                        index = 0xFFFFFFFF;
+                        return;
+                    }
+                    next = home.entities.at(index);
+                    if (home.entityValid(next.id) && (!filter || (maskValid(next.mask)))){
+                        return;
+                    }
+                }
             }
             entID operator*() const {
                 if (index == 0xFFFFFFFF){ return 0xFFFFFFFFFFFFFFFF; }
@@ -121,7 +138,7 @@ public:
                         return *this;
                     }
                     auto next = home.entities.at(index);
-                    if (home.entityValid(next.id) && (!filter || (next.mask == mask))){
+                    if (home.entityValid(next.id) && (!filter || (maskValid(next.mask)))){
                         return *this;
                     }
                 }
@@ -184,24 +201,24 @@ template <class T>
 T& ECS::getComp(entID i){
     assert(entityValid(i));
     int compID = getCompID<T>();
-    assert(entities.at(i).mask.test(compID));
-    return *((T*) pools.at(compID)->get(i));
+    assert(entities.at(getEntityIndex(i)).mask.test(compID));
+    return *((T*) pools.at(compID)->get(getEntityIndex(i)));
 }
 
 template <class T>
 T* ECS::tryGetComp(entID i){
     assert(entityValid(i));
     int compID = getCompID<T>();
-    if (!entities.at(i).mask.test(compID)){
+    if (!entities.at(getEntityIndex(i)).mask.test(compID)){
         return nullptr;
     }
-    return *((T*) pools.at(compID)->get(i));
+    return *((T*) pools.at(compID)->get(getEntityIndex(i)));
 }
 
 template <class T>
 void ECS::removeComp(entID i){
     assert(entityValid(i));
-    entities.at(i).mask.reset(getCompID<T>());
+    entities.at(getEntityIndex(i)).mask.reset(getCompID<T>());
     //TODO: dealloc?
 }
 
