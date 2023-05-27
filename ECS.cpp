@@ -16,7 +16,7 @@ ECS::ObjectPool::~ObjectPool(){
     delete [] data;
 }
 void* ECS::ObjectPool::get(size_t i){
-    assert(i < MAX_COMPONENTS);
+    assert(i < MAX_ENTITIES);
     return data + (i * obj_size);
 }
 

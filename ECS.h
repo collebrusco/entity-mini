@@ -21,7 +21,7 @@
 #include <vector>
 
 const uint32_t MAX_COMPONENTS = 64;
-const uint32_t MAX_ENTITIES = 0x100;
+const uint32_t MAX_ENTITIES = 0x10000;
 
 typedef uint64_t entID;
 typedef std::bitset<MAX_COMPONENTS> ComponentMask;
