@@ -66,6 +66,8 @@ public:
     
     template <class T>
     T& addComp(entID i);
+    template <class T, typename... ArgTypes>
+    T& addComp(entID i, ArgTypes... args);
     template <class T>
     T& getComp(entID i);
     template <class T>
@@ -159,6 +161,21 @@ T& ECS::addComp(entID i){
         pools[compID] = new ObjectPool(sizeof(T));
     }
     T* component = new (pools[compID]->get(getEntityIndex(i))) T();
+    entities.at(getEntityIndex(i)).mask.set(getCompID<T>());
+    return *component;
+}
+
+template <class T, typename... ArgTypes>
+T& ECS::addComp(entID i, ArgTypes... args){
+    assert(entityValid(i));
+    int compID = getCompID<T>();
+    if (compID >= pools.size()){
+        pools.resize(compID + 1, nullptr);
+    }
+    if (pools[compID] == nullptr){
+        pools[compID] = new ObjectPool(sizeof(T));
+    }
+    T* component = new (pools[compID]->get(getEntityIndex(i))) T(args...);
     entities.at(getEntityIndex(i)).mask.set(getCompID<T>());
     return *component;
 }
