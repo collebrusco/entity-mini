@@ -65,18 +65,20 @@ public:
     size_t numComponents();
     
     template <class T>
-    T* addComp(entID i);
+    T& addComp(entID i);
     template <class T>
-    T* getComp(entID i);
+    T& getComp(entID i);
+    template <class T>
+    T* tryGetComp(entID i);
     template <class T>
     void removeComp(entID i);
     
     template <class... Types>
     class SceneView {
+        friend class ECS;
         ECS & home;
         ComponentMask mask;
         bool filter;
-    public:
         SceneView(ECS* h) : home(*h) {
             filter = !(sizeof...(Types) == 0);
             mask.reset();
@@ -87,6 +89,7 @@ public:
                 }
             }
         }
+    public:
         class ViewIterator {
         private:
             ECS & home;
@@ -146,7 +149,7 @@ int ECS::getCompID() {
 }
 
 template <class T>
-T* ECS::addComp(entID i){
+T& ECS::addComp(entID i){
     assert(entityValid(i));
     int compID = getCompID<T>();
     if (compID >= pools.size()){
@@ -157,17 +160,25 @@ T* ECS::addComp(entID i){
     }
     T* component = new (pools[compID]->get(getEntityIndex(i))) T();
     entities.at(getEntityIndex(i)).mask.set(getCompID<T>());
-    return component;
+    return *component;
 }
 
 template <class T>
-T* ECS::getComp(entID i){
+T& ECS::getComp(entID i){
+    assert(entityValid(i));
+    int compID = getCompID<T>();
+    assert(entities.at(i).mask.test(compID));
+    return *((T*) pools.at(compID)->get(i));
+}
+
+template <class T>
+T* ECS::tryGetComp(entID i){
     assert(entityValid(i));
     int compID = getCompID<T>();
     if (!entities.at(i).mask.test(compID)){
         return nullptr;
     }
-    return (T*) pools.at(compID)->get(i);
+    return *((T*) pools.at(compID)->get(i));
 }
 
 template <class T>
