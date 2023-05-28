@@ -72,6 +72,7 @@ uint32_t ECS::getEntityIndex(const entID & i) const {
 
 // check if an id matches the one at its index
 bool ECS::entityValid(entID i) const {
+    if (getEntityIndex(i) == 0xFFFFFFFF){return false;}
     return i == (entities.at(getEntityIndex(i)).id);
 }
 

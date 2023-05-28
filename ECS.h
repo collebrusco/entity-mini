@@ -212,7 +212,7 @@ T* ECS::tryGetComp(entID i){
     if (!entities.at(getEntityIndex(i)).mask.test(compID)){
         return nullptr;
     }
-    return *((T*) pools.at(compID)->get(getEntityIndex(i)));
+    return ((T*) pools.at(compID)->get(getEntityIndex(i)));
 }
 
 template <class T>
