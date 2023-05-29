@@ -13,7 +13,7 @@ Many entity systems treat entites as containers of components, where components 
 * The scene stores components in large contigious arrays, making looping over components effecient.
 * The ECS provides a simple way to loop over every entity that has a specific set of components
 
-Here is an example of creating a scene with some entities, giving them components, and looping over them. For an example of real use, see my [flappy bird](github.com/collebrusco/flappy-bird) game created with this and my graphics library as an example.
+Here is an example of creating a scene with some entities, giving them components, and looping over them. For an example of real use, see my [flappy bird](https://github.com/collebrusco/flappy-bird) game created with this and my graphics library as an example.
 
 ```c++
 ECS scene;
