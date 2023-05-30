@@ -13,7 +13,7 @@ Many entity systems treat entites as containers of components, where components 
 * The scene stores components in large contigious arrays, making looping over components effecient.
 * The ECS provides a simple way to loop over every entity that has a specific set of components
 
-Here is an example of creating a scene with some entities, giving them components, and looping over them. For an example of real use, see my [flappy bird](https://github.com/collebrusco/flappy-bird) game created with this and my graphics library as an example.
+Here is an example of creating a scene with some entities, giving them components, and looping over them. For an example of real use, see my [flappy bird](https://github.com/collebrusco/flappy-bird) game created with this and my graphics library.
 
 ```c++
 ECS scene;
@@ -22,19 +22,20 @@ auto e2 = scene.newEntity();
 auto e3 = scene.newEntity(); 
 
 scene.addComp<Transform>(e1);
-scene.addComp<Transform>(e2, vec2(0, 0), 90.f); // forward comoponent constructor args
-Transform& t = scene.addComp<Transform>(e3);    // get reference right away
+scene.addComp<Transform>(e2, vec2(0, 0), 90.f); // forward component constructor args
+scene.addComp<Transform>(e3);    
 
 scene.addComp<Renderable>(e1);
 scene.addComp<Renderable>(e2);
 
-for (auto e : scene.view<Transform, Renderable>()){
-  // view e1 and e2, as they have transform and render comps, but e3 does not
+// view every entity with a transform AND a renderable...
+for (auto e : scene.view<Transform, Renderable>()){   
   auto& transform = scene.getComp<Transform>(e); // get reference to component...
   // do something...
 }
 
+// give view no template args to view all entities...
 for (auto e : scene.view<>()){
-  // view all entities...
+  // do something...
 }
 ```
