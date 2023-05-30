@@ -22,8 +22,8 @@ auto e2 = scene.newEntity();
 auto e3 = scene.newEntity(); 
 
 scene.addComp<Transform>(e1);
-scene.addComp<Transform>(e2);
-scene.addComp<Transform>(e3);
+scene.addComp<Transform>(e2, vec2(0, 0), 90.f); // forward comoponent constructor args
+Transform& t = scene.addComp<Transform>(e3);    // get reference right away
 
 scene.addComp<Renderable>(e1);
 scene.addComp<Renderable>(e2);
