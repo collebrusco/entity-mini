@@ -109,7 +109,7 @@ public:
                 if (maskValid(next.mask)) {return;}
                 while (1) {
                     index++;
-                    if (index >= home.entities.size()){
+                    if (index >= (uint32_t)home.entities.size()){
                         index = 0xFFFFFFFF;
                         return;
                     }
@@ -133,7 +133,7 @@ public:
                 if (index == 0xFFFFFFFF){return *this;}
                 while (1) {
                     index++;
-                    if (index >= home.entities.size()){
+                    if (index >= (uint32_t)home.entities.size()){
                         index = 0xFFFFFFFF;
                         return *this;
                     }
@@ -171,7 +171,7 @@ template <class T>
 T& ECS::addComp(entID i){
     assert(entityValid(i));
     int compID = getCompID<T>();
-    if (compID >= pools.size()){
+    if (compID >= (int)pools.size()){
         pools.resize(compID + 1, nullptr);
     }
     if (pools[compID] == nullptr){
@@ -186,7 +186,7 @@ template <class T, typename... ArgTypes>
 T& ECS::addComp(entID i, ArgTypes... args){
     assert(entityValid(i));
     int compID = getCompID<T>();
-    if (compID >= pools.size()){
+    if (compID >= (int)pools.size()){
         pools.resize(compID + 1, nullptr);
     }
     if (pools[compID] == nullptr){
