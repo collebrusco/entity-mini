@@ -29,14 +29,14 @@ typedef std::bitset<MAX_COMPONENTS> ComponentMask;
 class ECS {
 private:
     // entity id parsing
-    entID genEntityIDat(uint32_t index);
-    entID replaceEntityIDat(uint32_t index);
-    void clearEntityID(entID&);
-    uint32_t getEntityIndex(entID const&) const;
+    entID gen_entity_id_at(uint32_t index);
+    entID replace_entity_id_at(uint32_t index);
+    void clear_entity_id(entID&);
+    uint32_t get_entity_index(entID const&) const;
     // component ID
     unsigned int p_componentCounter{0};
     template <class T>
-    int getCompID();
+    int get_comp_id();
     // entity/mask list
     struct EntityData {
         entID id;
@@ -85,7 +85,7 @@ public:
             filter = !(sizeof...(Types) == 0);
             mask.reset();
             if (filter){
-                int ids[] = { 0, home.getCompID<Types>() ... };
+                int ids[] = { 0, home.get_comp_id<Types>() ... };
                 for (int i = 0; i < sizeof...(Types); i++){
                     mask.set(ids[i+1]);
                 }
@@ -162,7 +162,7 @@ public:
 
 
 template <class T>
-int ECS::getCompID() {
+int ECS::get_comp_id() {
     static int cid = p_componentCounter++;
     return cid;
 }
@@ -170,55 +170,55 @@ int ECS::getCompID() {
 template <class T>
 T& ECS::addComp(entID i){
     assert(entityValid(i));
-    int compID = getCompID<T>();
+    int compID = get_comp_id<T>();
     if (compID >= (int)pools.size()){
         pools.resize(compID + 1, nullptr);
     }
     if (pools[compID] == nullptr){
         pools[compID] = new ObjectPool(sizeof(T));
     }
-    T* component = new (pools[compID]->get(getEntityIndex(i))) T();
-    entities.at(getEntityIndex(i)).mask.set(getCompID<T>());
+    T* component = new (pools[compID]->get(get_entity_index(i))) T();
+    entities.at(get_entity_index(i)).mask.set(get_comp_id<T>());
     return *component;
 }
 
 template <class T, typename... ArgTypes>
 T& ECS::addComp(entID i, ArgTypes... args){
     assert(entityValid(i));
-    int compID = getCompID<T>();
+    int compID = get_comp_id<T>();
     if (compID >= (int)pools.size()){
         pools.resize(compID + 1, nullptr);
     }
     if (pools[compID] == nullptr){
         pools[compID] = new ObjectPool(sizeof(T));
     }
-    T* component = new (pools[compID]->get(getEntityIndex(i))) T(args...);
-    entities.at(getEntityIndex(i)).mask.set(getCompID<T>());
+    T* component = new (pools[compID]->get(get_entity_index(i))) T(args...);
+    entities.at(get_entity_index(i)).mask.set(get_comp_id<T>());
     return *component;
 }
 
 template <class T>
 T& ECS::getComp(entID i){
     assert(entityValid(i));
-    int compID = getCompID<T>();
-    assert(entities.at(getEntityIndex(i)).mask.test(compID));
-    return *((T*) pools.at(compID)->get(getEntityIndex(i)));
+    int compID = get_comp_id<T>();
+    assert(entities.at(get_entity_index(i)).mask.test(compID));
+    return *((T*) pools.at(compID)->get(get_entity_index(i)));
 }
 
 template <class T>
 T* ECS::tryGetComp(entID i){
     assert(entityValid(i));
-    int compID = getCompID<T>();
-    if (!entities.at(getEntityIndex(i)).mask.test(compID)){
+    int compID = get_comp_id<T>();
+    if (!entities.at(get_entity_index(i)).mask.test(compID)){
         return nullptr;
     }
-    return ((T*) pools.at(compID)->get(getEntityIndex(i)));
+    return ((T*) pools.at(compID)->get(get_entity_index(i)));
 }
 
 template <class T>
 void ECS::removeComp(entID i){
     assert(entityValid(i));
-    entities.at(getEntityIndex(i)).mask.reset(getCompID<T>());
+    entities.at(get_entity_index(i)).mask.reset(get_comp_id<T>());
     //TODO: dealloc?
 }
 

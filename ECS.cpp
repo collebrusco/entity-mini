@@ -25,10 +25,10 @@ entID ECS::newEntity(){
     if (!freelist.empty()){
         uint32_t index = (uint32_t)freelist.back();
         freelist.pop_back();
-        entities[index].id = replaceEntityIDat(index);
+        entities[index].id = replace_entity_id_at(index);
         return entities[index].id;
     }
-    entities.push_back({genEntityIDat((uint32_t)entities.size()), ComponentMask()});
+    entities.push_back({gen_entity_id_at((uint32_t)entities.size()), ComponentMask()});
     return entities.back().id;
 }
 
@@ -38,25 +38,25 @@ void ECS::removeEntity(entID& i) {
     assert(index < entities.size());
     assert(i == entities.at(index).id);
     entities.at(index).mask.reset();
-    clearEntityID(entities.at(index).id);
+    clear_entity_id(entities.at(index).id);
     i = entities.at(index).id;
     freelist.push_back(index);
 }
 
 // generate version 0 entity ID at an index
-entID ECS::genEntityIDat(uint32_t index) {
+entID ECS::gen_entity_id_at(uint32_t index) {
     return (entID{0} | index) << 32;
 }
 
 // increment version number at index
-entID ECS::replaceEntityIDat(uint32_t index) {
+entID ECS::replace_entity_id_at(uint32_t index) {
     assert(index < entities.size());
     entID res = entities.at(index).id;
     return ((res & ~0xFFFFFFFF00000000) | ((uint64_t)index << 32)) | ((res & 0xFFFFFFFF) + 1);
 }
 
 // invalidate id while maintaining version
-void ECS::clearEntityID(entID& i) {
+void ECS::clear_entity_id(entID& i) {
     auto index = getEntityIndex(i);
     assert(index < entities.size());
     assert(i == entities.at(index).id);
