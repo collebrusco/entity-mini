@@ -86,7 +86,7 @@ public:
             mask.reset();
             if (filter){
                 int ids[] = { 0, home.get_comp_id<Types>() ... };
-                for (int i = 0; i < sizeof...(Types); i++){
+                for (size_t i = 0; i < sizeof...(Types); i++){
                     mask.set(ids[i+1]);
                 }
             }

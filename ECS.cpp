@@ -34,7 +34,7 @@ entID ECS::newEntity(){
 
 // invalidate ID and add index to free list
 void ECS::removeEntity(entID& i) {
-    uint32_t index = getEntityIndex(i);
+    uint32_t index = get_entity_index(i);
     assert(index < entities.size());
     assert(i == entities.at(index).id);
     entities.at(index).mask.reset();
@@ -57,7 +57,7 @@ entID ECS::replace_entity_id_at(uint32_t index) {
 
 // invalidate id while maintaining version
 void ECS::clear_entity_id(entID& i) {
-    auto index = getEntityIndex(i);
+    auto index = get_entity_index(i);
     assert(index < entities.size());
     assert(i == entities.at(index).id);
     entID res = entities.at(index).id;
@@ -66,14 +66,14 @@ void ECS::clear_entity_id(entID& i) {
 }
 
 // isolate index half of id
-uint32_t ECS::getEntityIndex(const entID & i) const {
+uint32_t ECS::get_entity_index(const entID & i) const {
     return i >> 32;
 }
 
 // check if an id matches the one at its index
 bool ECS::entityValid(entID i) const {
-    if (getEntityIndex(i) == 0xFFFFFFFF){return false;}
-    return i == (entities.at(getEntityIndex(i)).id);
+    if (get_entity_index(i) == 0xFFFFFFFF){return false;}
+    return i == (entities.at(get_entity_index(i)).id);
 }
 
 // number of active enemies
