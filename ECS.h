@@ -190,10 +190,10 @@ T& ECS::addComp(entID i){
     assert(entityValid(i));
     int compID = get_comp_id<T>();
     if (compID >= (int)pools.size()){
-        pools.emplace_back(std::move(ObjectPool()));
+        pools.emplace_back(ObjectPool());
     }
     if (pools[compID].data == nullptr){
-        pools[compID] = std::move(ObjectPool(sizeof(T)));
+        pools[compID] = ObjectPool(sizeof(T));
     }
     T* component = new (pools[compID].get(get_entity_index(i))) T();
     entities.at(get_entity_index(i)).mask.set(get_comp_id<T>());
@@ -205,10 +205,10 @@ T& ECS::addComp(entID i, ArgTypes... args){
     assert(entityValid(i));
     int compID = get_comp_id<T>();
     if (compID >= (int)pools.size()){
-        pools.emplace_back(std::move(ObjectPool()));
+        pools.emplace_back(ObjectPool());
     }
     if (pools[compID].data == nullptr){
-        pools[compID] = std::move(ObjectPool(sizeof(T)));
+        pools[compID] = ObjectPool(sizeof(T));
     }
     T* component = new (pools[compID].get(get_entity_index(i))) T(args...);
     entities.at(get_entity_index(i)).mask.set(get_comp_id<T>());
