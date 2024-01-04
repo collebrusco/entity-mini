@@ -19,6 +19,8 @@
 #define ECS_h
 #include <bitset>
 #include <vector>
+#include "logger/log.h"
+LOG_MODULE(ECS);
 
 const uint32_t MAX_COMPONENTS = 64;
 const uint32_t MAX_ENTITIES = 0x10000;
@@ -49,12 +51,13 @@ private:
     struct ObjectPool {
         size_t obj_size;
         char* data{0};
+        ObjectPool();
         ObjectPool(size_t s);
         ~ObjectPool();
         void* get(size_t i);
     };
     
-    std::vector<ObjectPool*> pools;
+    std::vector<ObjectPool> pools;
     
 public:
     entID newEntity();
@@ -182,50 +185,54 @@ int ECS::get_comp_id() {
 
 template <class T>
 T& ECS::addComp(entID i){
+    LOG_DBG("addcomp..");
     assert(entityValid(i));
     int compID = get_comp_id<T>();
     if (compID >= (int)pools.size()){
-        pools.resize(compID + 1, nullptr);
+        pools.resize(compID + 1, ObjectPool());
     }
-    if (pools[compID] == nullptr){
-        pools[compID] = new ObjectPool(sizeof(T));
+    if (pools[compID].data == nullptr){
+        pools[compID] = ObjectPool(sizeof(T));
     }
-    T* component = new (pools[compID]->get(get_entity_index(i))) T();
+    T* component = new (pools[compID].get(get_entity_index(i))) T();
     entities.at(get_entity_index(i)).mask.set(get_comp_id<T>());
     return *component;
 }
 
 template <class T, typename... ArgTypes>
 T& ECS::addComp(entID i, ArgTypes... args){
+    LOG_DBG("addcomp constructor..");
     assert(entityValid(i));
     int compID = get_comp_id<T>();
     if (compID >= (int)pools.size()){
-        pools.resize(compID + 1, nullptr);
+        pools.resize(compID + 1, ObjectPool());
     }
-    if (pools[compID] == nullptr){
-        pools[compID] = new ObjectPool(sizeof(T));
+    if (pools[compID].data == nullptr){
+        pools[compID] = ObjectPool(sizeof(T));
     }
-    T* component = new (pools[compID]->get(get_entity_index(i))) T(args...);
+    T* component = new (pools[compID].get(get_entity_index(i))) T(args...);
     entities.at(get_entity_index(i)).mask.set(get_comp_id<T>());
     return *component;
 }
 
 template <class T>
 T& ECS::getComp(entID i){
+    LOG_DBG("getcomp..");
     assert(entityValid(i));
     int compID = get_comp_id<T>();
     assert(entities.at(get_entity_index(i)).mask.test(compID));
-    return *((T*) pools.at(compID)->get(get_entity_index(i)));
+    return *((T*) pools.at(compID).get(get_entity_index(i)));
 }
 
 template <class T>
 T* ECS::tryGetComp(entID i){
+    LOG_DBG("tryget..");
     assert(entityValid(i));
     int compID = get_comp_id<T>();
     if (!entities.at(get_entity_index(i)).mask.test(compID)){
         return nullptr;
     }
-    return ((T*) pools.at(compID)->get(get_entity_index(i)));
+    return ((T*) pools.at(compID).get(get_entity_index(i)));
 }
 
 template <class T>

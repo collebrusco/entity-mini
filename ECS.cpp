@@ -8,12 +8,16 @@
 
 #include "ECS.h"
 
+ECS::ObjectPool::ObjectPool(){
+    obj_size = -1;
+    data = 0;
+}
 ECS::ObjectPool::ObjectPool(size_t s){
     obj_size = s;
     data = new char[obj_size * MAX_ENTITIES];
 }
 ECS::ObjectPool::~ObjectPool(){
-    delete [] data;
+    if (data) delete [] data;
 }
 void* ECS::ObjectPool::get(size_t i){
     assert(i < MAX_ENTITIES);
