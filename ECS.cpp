@@ -24,6 +24,26 @@ void* ECS::ObjectPool::get(size_t i){
     return data + (i * obj_size);
 }
 
+// ECS::ObjectPool::ObjectPool(ECS::ObjectPool& other) {
+//     this->obj_size = other.obj_size;
+//     this->data = other.data;
+//     other.obj_size = -1;
+//     other.data = 0;
+// }
+ECS::ObjectPool::ObjectPool(ECS::ObjectPool&& other) {
+    this->obj_size = other.obj_size;
+    this->data = other.data;
+    other.obj_size = -1;
+    other.data = 0;
+}
+ECS::ObjectPool & ECS::ObjectPool::operator=(ECS::ObjectPool&& other) {
+    this->obj_size = other.obj_size;
+    this->data = other.data;
+    other.obj_size = -1;
+    other.data = 0;
+    return *this;
+}
+
 // check freelist for empty spot, or append id/bitmask pair
 entID ECS::newEntity(){
     if (!freelist.empty()){
