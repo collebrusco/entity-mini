@@ -74,6 +74,9 @@ public:
     T* tryGetComp(entID i);
     template <class T>
     void removeComp(entID i);
+
+    // template <class T>
+    // void shuffleComp();
     
     template <class... Types>
     class SceneView {
@@ -167,6 +170,16 @@ int ECS::get_comp_id() {
     return cid;
 }
 
+
+// template <class T>
+// void ECS::shuffleComp() {
+//     int compID = get_comp_id<T>();
+//     if (compID >= (int)pools.size() || pools[compID] == nullptr){
+//         return;
+//     }
+//     pools[compID]
+// }
+
 template <class T>
 T& ECS::addComp(entID i){
     assert(entityValid(i));
@@ -219,7 +232,6 @@ template <class T>
 void ECS::removeComp(entID i){
     assert(entityValid(i));
     entities.at(get_entity_index(i)).mask.reset(get_comp_id<T>());
-    //TODO: dealloc?
 }
 
 #endif /* ECS_h */
