@@ -20,7 +20,7 @@
 #include <vector>
 
 const uint32_t MAX_COMPONENTS = 64;
-const uint32_t MAX_ENTITIES = 0x10000;
+const uint32_t MAX_ENTITIES = 0x40000;
 
 typedef uint64_t entID;
 typedef std::bitset<MAX_COMPONENTS> ComponentMask;
@@ -189,7 +189,7 @@ template <class T>
 T& ECS::addComp(entID i){
     assert(entityValid(i));
     int compID = get_comp_id<T>();
-    if (compID >= (int)pools.size()){
+    while (compID >= (int)pools.size()){
         pools.emplace_back(ObjectPool());
     }
     if (pools[compID].data == nullptr){
