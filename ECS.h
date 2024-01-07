@@ -204,7 +204,7 @@ template <class T, typename... ArgTypes>
 T& ECS::addComp(entID i, ArgTypes... args){
     assert(entityValid(i));
     int compID = get_comp_id<T>();
-    if (compID >= (int)pools.size()){
+    while (compID >= (int)pools.size()){
         pools.emplace_back(ObjectPool());
     }
     if (pools[compID].data == nullptr){
