@@ -18,6 +18,7 @@
 #define ECS_h
 #include <bitset>
 #include <vector>
+#include <cassert>
 
 const uint32_t MAX_COMPONENTS = 64;
 const uint32_t MAX_ENTITIES = 0x40000;
