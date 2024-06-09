@@ -1,10 +1,3 @@
-//
-//  ECS.h
-//  opengl-tools
-//
-//  Created by Frank Collebrusco on 1/4/23.
-//
-//
 
  /*
     An ECS manages a list of entities, each with a set of components
@@ -19,6 +12,7 @@
 #include <bitset>
 #include <vector>
 #include <cassert>
+#include <stdint.h>
 
 const uint32_t MAX_COMPONENTS = 64;
 const uint32_t MAX_ENTITIES = 0x40000;
