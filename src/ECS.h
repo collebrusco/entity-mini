@@ -85,6 +85,7 @@ public:
         ComponentMask mask;
         bool filter;
         SceneView(ECS* h) : home(*h) {
+            /* TODO error checking: make sure comps exist here first */
             filter = !(sizeof...(Types) == 0);
             mask.reset();
             if (filter){
