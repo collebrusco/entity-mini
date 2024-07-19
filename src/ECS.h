@@ -109,6 +109,10 @@ public:
             ViewIterator(ECS & h, uint32_t i, ComponentMask m, bool f) : home(h) {
                 index = i; mask = m; filter = f;
                 if (index == 0xFFFFFFFF){return;}
+                if (home.entities.size() == 0) {
+                    index = -1;
+                    return;
+                }
                 auto next = home.entities.at(index);
                 if (maskValid(next.mask)) {return;}
                 while (1) {
