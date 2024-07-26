@@ -5,6 +5,11 @@
     
     useful when many disjointed systems need to act on a similar large set of organized data
     usually game engines
+
+    7/24/24 notes
+    - component IDs are static -- every instance of ECS shares them. this could be fixed
+    - max comp and entity numbers are also static -- ideally template these
+    - added tags that don't alloc anything but get a component id, moderately tested
  */
 
 #ifndef ECS_h
@@ -43,14 +48,15 @@ private:
     struct ObjectPool {
         size_t obj_size;
         char* data{0};
-        ObjectPool();
+        ObjectPool(bool tag);
         ObjectPool(size_t s);
         ObjectPool(ObjectPool& other) = delete;
         ObjectPool(ObjectPool&& other);
         ObjectPool(ObjectPool const& other) = delete;
         ObjectPool& operator=(ObjectPool&& other);
-        // ObjectPool& operator=(ObjectPool const& other);
         ~ObjectPool();
+        bool valid() const;
+        bool nobuf() const;
         void* get(size_t i);
     };
     
@@ -65,7 +71,7 @@ public:
     size_t numComponents();
     
     template <class T>
-    T& addComp(entID i);
+    void addTag(entID i);
     template <class T, typename... ArgTypes>
     T& addComp(entID i, ArgTypes... args);
     template <class T>
@@ -174,45 +180,33 @@ int ECS::get_comp_id() {
     static int cid = p_componentCounter++;
     return cid;
 }
-
-
-// template <class T>
-// void ECS::shuffleComp() {
-//     int compID = get_comp_id<T>();
-//     if (compID >= (int)pools.size() || pools[compID] == nullptr){
-//         return;
-//     }
-//     pools[compID]
-// }
-
-template <class T>
-T& ECS::addComp(entID i){
-    assert(entityValid(i));
-    int compID = get_comp_id<T>();
-    while (compID >= (int)pools.size()){
-        pools.emplace_back(ObjectPool());
-    }
-    if (pools[compID].data == nullptr){
-        pools[compID] = ObjectPool(sizeof(T));
-    }
-    T* component = new (pools[compID].get(get_entity_index(i))) T();
-    entities.at(get_entity_index(i)).mask.set(get_comp_id<T>());
-    return *component;
-}
-
+#include <stdio.h>
 template <class T, typename... ArgTypes>
 T& ECS::addComp(entID i, ArgTypes... args){
     assert(entityValid(i));
     int compID = get_comp_id<T>();
     while (compID >= (int)pools.size()){
-        pools.emplace_back(ObjectPool());
+        pools.emplace_back(ObjectPool(true));
     }
-    if (pools[compID].data == nullptr){
+    if (pools[compID].nobuf()){
         pools[compID] = ObjectPool(sizeof(T));
     }
     T* component = new (pools[compID].get(get_entity_index(i))) T(args...);
     entities.at(get_entity_index(i)).mask.set(get_comp_id<T>());
     return *component;
+}
+
+template <class T>
+void ECS::addTag(entID i){
+    assert(entityValid(i));
+    int compID = get_comp_id<T>();
+    while (compID >= (int)pools.size()){
+        pools.emplace_back(ObjectPool(true));
+    }
+    if (pools[compID].valid()){
+        pools[compID] = ObjectPool(false);
+    }
+    entities.at(get_entity_index(i)).mask.set(get_comp_id<T>());
 }
 
 template <class T>

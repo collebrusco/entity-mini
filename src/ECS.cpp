@@ -8,8 +8,11 @@
 
 #include "ECS.h"
 
-ECS::ObjectPool::ObjectPool(){
-    obj_size = -1;
+#define ECS_OBJPOOL_NEEDBUF     -1
+#define ECS_OBJPOOL_INVALID     -2
+
+ECS::ObjectPool::ObjectPool(bool tag){
+    obj_size = tag ? ECS_OBJPOOL_NEEDBUF : ECS_OBJPOOL_INVALID;
     data = 0;
 }
 ECS::ObjectPool::ObjectPool(size_t s){
@@ -23,6 +26,8 @@ void* ECS::ObjectPool::get(size_t i){
     assert(i < MAX_ENTITIES);
     return data + (i * obj_size);
 }
+bool ECS::ObjectPool::valid() const {return obj_size == ECS_OBJPOOL_INVALID;}
+bool ECS::ObjectPool::nobuf() const {return obj_size == ECS_OBJPOOL_NEEDBUF;}
 
 // ECS::ObjectPool::ObjectPool(ECS::ObjectPool& other) {
 //     this->obj_size = other.obj_size;
