@@ -25,6 +25,9 @@ const uint32_t MAX_ENTITIES = 0x40000;
 typedef uint64_t entID;
 typedef std::bitset<MAX_COMPONENTS> ComponentMask;
 
+template <typename ... Args>
+struct Archetype {};
+
 class ECS {
 private:
     // entity id parsing
@@ -169,6 +172,11 @@ public:
     
     template <class... Types>
     SceneView<Types...> view(){
+        return SceneView<Types...>(this);
+    }
+
+    template <class... Types>
+    SceneView<Types...> view(Archetype<Types...> const& arch){
         return SceneView<Types...>(this);
     }
     
