@@ -176,8 +176,8 @@ public:
     }
 
     template <class... Types>
-    SceneView<Types...> view(Archetype<Types...> const& arch){
-        return SceneView<Types...>(this);
+    SceneView<Types...> view(Archetype<Types...> * arch){
+        (void)arch; return SceneView<Types...>(this);
     }
     
 };

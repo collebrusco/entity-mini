@@ -8,8 +8,8 @@
 
 #include "ECS.h"
 
-#define ECS_OBJPOOL_NEEDBUF     -1
-#define ECS_OBJPOOL_INVALID     -2
+#define ECS_OBJPOOL_NEEDBUF     ((size_t)(-1))
+#define ECS_OBJPOOL_INVALID     ((size_t)(-2))
 
 ECS::ObjectPool::ObjectPool(bool tag){
     obj_size = tag ? ECS_OBJPOOL_NEEDBUF : ECS_OBJPOOL_INVALID;
