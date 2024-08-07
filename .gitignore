@@ -2,6 +2,7 @@ cmake_install.cmake
 CMakeFiles/*
 CMakeCache.txt
 Makefile
+*.DS_Store
 
 # Prerequisites
 *.d
