@@ -1,5 +1,5 @@
 # entity-mini
-A simple entity component system. 
+A simple header-only entity component system. 
 
 ### What is an ECS?
 An entity component system (ECS) is a data structure designed for games that manages lists of components that belong to various entities.   
@@ -13,7 +13,7 @@ Many entity systems treat entites as containers of components, where components 
 * The scene stores components in large contigious arrays, making looping over components effecient.
 * The ECS provides a simple way to loop over every entity that has a specific set of components
 
-Here is an example of creating a scene with some entities, giving them components, and looping over them. For an example of real use, see my [flappy bird](https://github.com/collebrusco/flappy-bird) game created with this and my graphics library.
+Here is an example of creating a scene with some entities, giving them components, and looping over them. For an example of real use, see my [flappy bird [OUTDATED]](https://github.com/collebrusco/flappy-bird) game created with this and my graphics library.
 
 ```c++
 ECS scene;
