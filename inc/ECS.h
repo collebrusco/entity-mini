@@ -40,7 +40,7 @@ private:
         entID res = entities.at(index).id;
         return ((res & ~0xFFFFFFFF00000000) | ((uint64_t)index << 32)) | ((res & 0xFFFFFFFF) + 1);
     }
-    void clear_entity_id(entID&) {
+    void clear_entity_id(entID& i) {
         auto index = get_entity_index(i);
         assert(index < entities.size());
         assert(i == entities.at(index).id);
@@ -48,7 +48,9 @@ private:
         i = ((res & 0xFFFFFFFF) + 1) | (0xFFFFFFFF00000000);
         entities[index].id = i;
     }
-    uint32_t get_entity_index(entID const&) const;
+    static uint32_t get_entity_index(entID const& i) {
+        return i >> 32;
+    }
     // component ID
     unsigned int p_componentCounter{0};
     template <class T>
@@ -99,7 +101,10 @@ private:
         }
         bool valid() const {return obj_size == INVALID;}
         bool nobuf() const {return obj_size == NEEDBUF;}
-        void* get(size_t i);
+        void* get(size_t i) {
+            assert(i < MAX_ENTITIES);
+            return data + (i * obj_size);
+        }
     };
     
     std::vector<ObjectPool> pools;
@@ -115,7 +120,7 @@ public:
         entities.push_back({gen_entity_id_at((uint32_t)entities.size()), ComponentMask()});
         return entities.back().id;
     }
-    void removeEntity(entID&)  {
+    void removeEntity(entID& i)  {
         uint32_t index = get_entity_index(i);
         assert(index < entities.size());
         assert(i == entities.at(index).id);
@@ -124,7 +129,7 @@ public:
         i = entities.at(index).id;
         freelist.push_back(index);
     }
-    bool entityValid(entID) const {
+    bool entityValid(entID i) const {
         if (get_entity_index(i) == 0xFFFFFFFF){return false;}
         return i == (entities.at(get_entity_index(i)).id);
     }
