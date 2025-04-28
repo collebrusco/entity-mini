@@ -184,6 +184,15 @@ public:
         return ((T*) pools.at(compID).get(get_entity_index(i)));
     }
     template <class T>
+    T& addOrGetComp(entID i) {
+        assert(entityValid(i));
+        int compID = get_comp_id<T>();
+        if (!entities.at(get_entity_index(i)).mask.test(compID)){
+            return addComp<T>(i);
+        }
+        return *((T*) pools.at(compID).get(get_entity_index(i)));
+    }
+    template <class T>
     void removeComp(entID i) {
         assert(entityValid(i));
         entities.at(get_entity_index(i)).mask.reset(get_comp_id<T>());
