@@ -10,12 +10,18 @@
     - component IDs are static -- every instance of ECS shares them. this could be fixed
     - max comp and entity numbers are also static -- ideally template these
     - added tags that don't alloc anything but get a component id, moderately tested
+
+    4/29/25 notes
+    - ECS is header only now and max entities is templated, max components still should be
+    - Improving the archetype feature; archetypes now hold references to each component in the archetype
+        - this is not well tested yet
  */
 
 #ifndef ECS_h
 #define ECS_h
 #include <bitset>
 #include <vector>
+#include <tuple>
 #include <cassert>
 #include <stdint.h>
 #include "c_abstract.h"
@@ -24,9 +30,6 @@ const uint32_t MAX_COMPONENTS = 64;
 
 typedef uint64_t entID;
 typedef std::bitset<MAX_COMPONENTS> ComponentMask;
-
-template <typename ... Args>
-struct Archetype {};
 
 template <size_t MAX_ENTITIES = 0x40000>
 class ECS {
@@ -95,7 +98,7 @@ private:
             other.obj_size = -1;
             other.data = 0;
             return *this;
-        }        
+        }
         ~ObjectPool() {
             if (data) delete [] data;
         }
@@ -108,8 +111,24 @@ private:
     };
     
     std::vector<ObjectPool> pools;
-    
+
 public:
+
+    template <typename ... Comps>
+    struct Archetype {
+        friend class ECS;
+        template<typename T>
+        T& get() {
+            return *std::get<T*>(components);
+        }
+        template<typename T>
+        const T& get() const {
+            return *std::get<T*>(components);
+        }
+    private:
+        std::tuple<Comps*...> components;
+    };
+
     entID newEntity() {
         if (!freelist.empty()){
             uint32_t index = (uint32_t)freelist.back();
@@ -151,7 +170,7 @@ public:
         if (pools[compID].valid()){
             pools[compID] = ObjectPool(false);
         }
-        entities.at(get_entity_index(i)).mask.set(get_comp_id<T>());
+        entities.at(get_entity_index(i)).mask.set(compID);
     }
     template <class T, typename... ArgTypes>
     T& addComp(entID i, ArgTypes... args) {
@@ -164,7 +183,7 @@ public:
             pools[compID] = ObjectPool(sizeof(T));
         }
         T* component = new (pools[compID].get(get_entity_index(i))) T(args...);
-        entities.at(get_entity_index(i)).mask.set(get_comp_id<T>());
+        entities.at(get_entity_index(i)).mask.set(compID);
         return *component;
     }
     template <class T>
@@ -198,9 +217,15 @@ public:
         entities.at(get_entity_index(i)).mask.reset(get_comp_id<T>());
     }
 
-    // template <class T>
-    // void shuffleComp();
-    
+    // --- Populate an Archetype with pointers ---
+    template<typename... Types>
+    void fill_archetype(entID id, Archetype<Types...>* arch) {
+        assert(entityValid(id));
+        assert(arch != nullptr);
+        arch->components = std::make_tuple(tryGetComp<Types>(id)...);
+    }
+
+    // ----------- SceneView -----------
     template <class... Types>
     class SceneView {
         friend class ECS;
@@ -229,8 +254,7 @@ public:
                 return !(((other & mask) ^ mask).any());
             }
         public:
-            ViewIterator(ECS & h, uint32_t i, ComponentMask m, bool f) : home(h) {
-                index = i; mask = m; filter = f;
+            ViewIterator(ECS & h, uint32_t i, ComponentMask m, bool f) : home(h), index(i), mask(m), filter(f) {
                 if (index == 0xFFFFFFFF){return;}
                 if (home.entities.size() == 0) {
                     index = -1;
@@ -238,17 +262,7 @@ public:
                 }
                 auto next = home.entities.at(index);
                 if (maskValid(next.mask)) {return;}
-                while (1) {
-                    index++;
-                    if (index >= (uint32_t)home.entities.size()){
-                        index = 0xFFFFFFFF;
-                        return;
-                    }
-                    next = home.entities.at(index);
-                    if (home.entityValid(next.id) && (!filter || (maskValid(next.mask)))){
-                        return;
-                    }
-                }
+                ++(*this);
             }
             entID operator*() const {
                 if (index == 0xFFFFFFFF){ return 0xFFFFFFFFFFFFFFFF; }
@@ -283,17 +297,83 @@ public:
             return ViewIterator(home, -1, mask, filter);
         }
     };
-    
+
     template <class... Types>
-    SceneView<Types...> view(){
+    SceneView<Types...> view() {
         return SceneView<Types...>(this);
     }
 
+    // ----------- ArchetypeSceneView -----------
     template <class... Types>
-    SceneView<Types...> view(Archetype<Types...> * arch){
-        (void)arch; return SceneView<Types...>(this);
+    class ArchetypeSceneView {
+        friend class ECS;
+        ECS& home;
+        Archetype<Types...>* arch;
+        ComponentMask mask;
+        bool filter;
+        ArchetypeSceneView(ECS* h, Archetype<Types...>* a) : home(*h), arch(a) {
+            filter = !(sizeof...(Types) == 0);
+            mask.reset();
+            if (filter){
+                int ids[] = { 0, home.get_comp_id<Types>()... };
+                for (size_t i = 0; i < sizeof...(Types); i++){
+                    mask.set(ids[i+1]);
+                }
+            }
+        }
+    public:
+        class ViewIterator {
+            ECS& home;
+            Archetype<Types...>* arch;
+            uint32_t index;
+            ComponentMask mask;
+            bool filter;
+            bool maskValid(ComponentMask& other){
+                return !(((other & mask) ^ mask).any());
+            }
+        public:
+            ViewIterator(ECS& h, uint32_t i, ComponentMask m, bool f, Archetype<Types...>* a)
+                : home(h), arch(a), index(i), mask(m), filter(f) {
+                if (index == 0xFFFFFFFF){return;}
+                if (home.entities.size() == 0) {
+                    index = -1;
+                    return;
+                }
+                auto next = home.entities.at(index);
+                if (maskValid(next.mask)) { home.fill_archetype<Types...>(next.id, arch); return; }
+                ++(*this);
+            }
+            entID operator*() const {
+                if (index == 0xFFFFFFFF){ return 0xFFFFFFFFFFFFFFFF; }
+                return home.entities.at(index).id;
+            }
+            bool operator==(ViewIterator const& other) const { return this->index == other.index; }
+            bool operator!=(ViewIterator const& other) const { return this->index != other.index; }
+            ViewIterator& operator++(){
+                if (index == 0xFFFFFFFF){return *this;}
+                while (1) {
+                    index++;
+                    if (index >= (uint32_t)home.entities.size()){
+                        index = 0xFFFFFFFF;
+                        return *this;
+                    }
+                    auto next = home.entities.at(index);
+                    if (home.entityValid(next.id) && (!filter || (maskValid(next.mask)))){
+                        home.fill_archetype<Types...>(next.id, arch);
+                        return *this;
+                    }
+                }
+            }
+        };
+
+        const ViewIterator begin() const { return ViewIterator(home, 0, mask, filter, arch); }
+        const ViewIterator end() const { return ViewIterator(home, -1, mask, filter, arch); }
+    };
+
+    template <class... Types>
+    ArchetypeSceneView<Types...> view(Archetype<Types...>& arch) {
+        return ArchetypeSceneView<Types...>(this, &arch);
     }
-    
 };
 
 #endif /* ECS_H */
