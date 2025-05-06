@@ -1,12 +1,33 @@
 # entity-mini
 A simple header-only entity component system. 
 
-An entity component system (ECS) is a data structure designed for games that manages lists of components that belong to various entities.   
-Many entity systems treat entites as containers of components, where components are any user defined type that an entity could have (maybe transform, mesh, velocity, health, AI, etc). Having entities be built of reusable components is a nice evolution from the nightmarish 10,000 line entity classes of the 90's (so i've heard, I wasn't there).      
-However, if entites are actually stored as aggregates of components, there is a large stride in memory between each subsequent component. many systems in code need to loop over all entities and perform some operation on one or more of its components, but rarely does a system need access to every single component. So if we store components in entities and store entities contiguously (array of structs), we are wasting a lot of each cache line we pull in as we move through the array, because most systems only need to operate on a few components. To address this, we could store all components in separate contigous arrays, and treat an 'entity' as more of an ID that we use to index these component arrays (struct of arrays). Designing around this kind of stuff is often called 'data oriented design' [wikipedia](https://en.wikipedia.org/wiki/Data-oriented_design)' and this is a big deal in AAA dev apparently.
+## Background
+An entity component system (ECS) is a data structure designed for games that manages lists of components that belong to various entities.    
+        
+It's useful to treat entites as containers of components, where components are any user defined type that could make up an entity (maybe transform, mesh, velocity, health, AI, etc). Having entities be built of reusable components is a nice evolution from the nightmarish 10,000 line entity base classes and inheritance trees of the 90's (so i've heard, I wasn't there).      
+
+### consider the hardware
+If entites are actually stored as aggregates of components, there is a large stride in memory between each subsequent component. This is what the layout of data in memory looks like, compared to what the cache line of a system that only cares about one component is gonna look like.
+
+| byte | content       | cache line    |
+|------------------|--------------------|--------------------|
+| 0           | entity0_pos   | --noise--     |
+| 8           | entity0_velo  | --noise--     |
+| 16          | entity0_mesh  | entity0_mesh  |
+| 24          | entity0_AI    | --noise--     |
+| 32          | entity1_pos   | --noise--     |
+| 40          | entity1_velo  | --noise--     |
+| 48          | entity1_mesh  | entity1_mesh  |
+| 52          | entity1_AI    | --noise--     |
+
+
+If you're unfamiliar with this kind of thing, the difference between missing cache and not missing cache is not small, on the order of ~100x.            
+If we store entities contiguously like this, we are wasting a lot of each cache line we pull in as we move through the array, because most systems only need to operate on a few components.         
+         
+To address this, we could store all components in separate contigous arrays, and treat an 'entity' as more of an ID that we use to index these component arrays. This is what an ECS does. Designing around this kind of stuff is often called 'data oriented design' [[wikipedia](https://en.wikipedia.org/wiki/Data-oriented_design)] and this is a big deal in AAA dev apparently.
    
 Regardless of the performance theory ECS's can also just be great organizational tools.    
-    
+
 ### How does it work?
 * Entites are actually just IDs, used to link components together
 * Components are any user defined type
