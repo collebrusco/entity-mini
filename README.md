@@ -1,12 +1,11 @@
 # entity-mini
 A simple header-only entity component system. 
 
-### What is an ECS?
 An entity component system (ECS) is a data structure designed for games that manages lists of components that belong to various entities.   
-Many entity systems treat entites as containers of components, where components are any user defined type that an entity could have. This saves us from the nightmarish 10,000 line entity classes of the 90's by letting us build entites out of various pieces. However, so many different systems are interested in an entity's components, that looping over entities starts to make less sense than looping over components themselves. An ECS retains this idea of entites as bags of components, but implements it with performance in mind.     
-
-**Thus, the key idea of an entity component system is to increase game loop effeciency by minimizing CPU cache misses, however ECS's can also be useful for purely orginazational reasons.** 
-
+Many entity systems treat entites as containers of components, where components are any user defined type that an entity could have. This saves us from the nightmarish 10,000 line entity classes of the 90's (so i've heard) by letting us build entites out of various pieces. However, so many different systems are interested in an entity's components, that looping over entities starts to make less sense than looping over components themselves. An ECS retains this idea of entites as bags of components, but implements it with performance (cache, data locality) in mind.     
+   
+Regardless of the performance theory ECS's can also just be great organizational tools    
+    
 ### How does it work?
 * Entites are actually just IDs, used to link components together
 * Components are any user defined type
